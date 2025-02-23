@@ -101,20 +101,20 @@ class Neo4jClient:
             # Format the relationship type directly into the query
             rel_type = relationship_data.relation_type.replace("`", "").replace('"', "").replace("'", "")
             query = f"""
-                MATCH (source) WHERE elementId(source) = $source_entity_id
-                MATCH (target) WHERE elementId(target) = $target_entity_id
+                MATCH (source) WHERE source.name = $source_entity_name
+                MATCH (target) WHERE target.name = $target_entity_name
                 MERGE (source)-[r:`{rel_type}`]->(target)
                 SET r += $attributes
             """
-            logger.debug(f"Executing Neo4j query: {query}")
+            logger.info(f"Executing Neo4j query: {query}")
             tx.run(
                 query,
-                source_entity_id=relationship_data.source_entity_id,
-                target_entity_id=relationship_data.target_entity_id,
+                source_entity_name=relationship_data.source_entity_name,
+                target_entity_name=relationship_data.target_entity_name,
                 attributes=relationship_data.attributes,
             )
             logger.info(
-                f"Created/merged relationship: {relationship_data.relation_type} between entities {relationship_data.source_entity_id} and {relationship_data.target_entity_id}"
+                f"Created/merged relationship: {relationship_data.relation_type} between entities {relationship_data.source_entity_name} and {relationship_data.target_entity_name}"
             )
 
         try:
@@ -122,3 +122,34 @@ class Neo4jClient:
                 session.execute_write(_create_relationship_tx, relationship)
         except Exception as e:
             logger.error(f"Error creating Neo4j relationship: {e}")
+
+    def find_longest_paths(self) -> List[str]:
+        """Finds the longest path in the Neo4j graph and returns a list of node IDs."""
+        def _find_longest_path_tx(tx):
+            query = """
+            MATCH p = (n)-[*]->(m)
+            ORDER BY length(p) DESC
+            LIMIT 3
+            RETURN [node in nodes(p) | node.name] AS nodeNames, length(p) AS pathLength
+            """
+            logging.info(f"query: {query}")
+            result = tx.run(query)
+            results = []
+            for record in result:
+                results.append(record["nodeNames"])
+            return results
+
+        try:
+            with self._driver.session() as session:
+                print("Running query..")
+                node_ids = session.execute_read(_find_longest_path_tx)
+                if node_ids:
+                    logger.info(f"Longest path found with {len(node_ids)} nodes.")
+                    logger.debug(f"Node IDs along the longest path: {node_ids}")
+                    return node_ids
+                else:
+                    logger.warning("No path found in the graph.")
+                    return None
+        except Exception as e:
+            logger.error(f"Error finding the longest path in Neo4j: {e}")
+            return None

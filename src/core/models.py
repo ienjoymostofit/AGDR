@@ -1,10 +1,10 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
 class Entity(BaseModel):
     """Represents an entity in the knowledge graph."""
 
-    id: str = Field(str, description="Unique identifier for the entity.")
+    id: Optional[str] = Field(str, description="Unique identifier for the entity.")
     name: str = Field(..., description="Name of the entity.")
     description: str = Field(..., description="Description of the entity.")
     category: List[str] = Field(..., description="List of categories the entity belongs to.")
@@ -13,8 +13,8 @@ class Entity(BaseModel):
 class Relationship(BaseModel):
     """Represents a relationship between two entities in the knowledge graph."""
 
-    source_entity_id: str = Field(..., description="ID of the source entity.")
-    target_entity_id: str = Field(..., description="ID of the target entity.")
+    source_entity_name: str = Field(..., description="Name of the source entity.")
+    target_entity_name: str = Field(..., description="Name of the target entity.")
     relation_type: str = Field(..., description="Type of relationship between the entities (snake_case).")
     attributes: Dict[str, Any] = Field(..., description="Attributes describing the relationship.")
 

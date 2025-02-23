@@ -3,6 +3,7 @@ import logging
 from typing import Tuple
 from openai import OpenAI
 from core.config import ModelConfig
+import Levenshtein
 
 class Embedder:
     def __init__(self, model_config: ModelConfig):
@@ -25,6 +26,31 @@ class Embedder:
         self.embedding_cache[text] = embedding
         return embedding
 
+    def are_similar(cosine_similarity, levenshtein_similarity):
+        if cosine_similarity > 0.8 and levenshtein_similarity < 0.3:
+            return "Different"
+        else:
+            return "Similar"
+
+
+    def normalized_levenshtein_distance(self, s1, s2):
+            """
+            Calculates the normalized Levenshtein distance between two strings.
+
+            The function is case-insensitive and ignores leading and trailing whitespaces.
+            It returns a value between 0 and 1, where 0 means the strings are identical and 1 means they are completely different.
+            """
+            s1 = s1.strip().lower()
+            s2 = s2.strip().lower()
+
+            distance = Levenshtein.distance(s1, s2)
+            max_len = max(len(s1), len(s2))
+
+            if max_len == 0:
+                return 0.0  # Handle empty strings case to avoid division by zero
+
+            return distance / max_len
+
     def euclidean_distance(self, vec1, vec2):
         """Calculate the Euclidean distance between two vectors."""
         squared_diff_sum = sum((a - b) ** 2 for a, b in zip(vec1, vec2))
@@ -33,18 +59,6 @@ class Embedder:
     def manhattan_distance(self, vec1, vec2):
         """Calculate the Manhattan (L1) distance between two vectors."""
         return sum(abs(a - b) for a, b in zip(vec1, vec2))
-
-    def compare_texts_euclidean(self, text1, text2):
-        """Compare two texts using Euclidean distance."""
-        embedding1 = self.get_embedding(text1)
-        embedding2 = self.get_embedding(text2)
-        return self.euclidean_distance(embedding1, embedding2)
-
-    def compare_texts_manhattan(self, text1, text2):
-        """Compare two texts using Manhattan distance."""
-        embedding1 = self.get_embedding(text1)
-        embedding2 = self.get_embedding(text2)
-        return self.manhattan_distance(embedding1, embedding2)
 
     def cosine_similarity(self, vec1, vec2):
         dot_product = sum(a * b for a, b in zip(vec1, vec2))
@@ -57,6 +71,21 @@ class Embedder:
         embedding2 = self.get_embedding(text2)
         similarity = self.cosine_similarity(embedding1, embedding2)
         return similarity
+
+    def is_same_concept(self, text1, text2):
+        text1 = text1.strip().replace(" ", "").lower()
+        text2 = text2.strip().replace(" ", "").lower()
+        embedding1 = self.get_embedding(text1)
+        embedding2 = self.get_embedding(text2)
+
+        # "Gustav V" "King Gustav V" : 0.86 with granite-embedding:30m-en, but also "Sweden" "Swedish" : 0.91, so not enough for our use case
+        cosine_similarity = self.cosine_similarity(embedding1, embedding2)
+        if cosine_similarity > 0.9:
+            levenshtein_similarity = 1 - self.normalized_levenshtein_distance(text1, text2)
+            if levenshtein_similarity > 0.7:
+                return True
+        else:
+            return False
 
     def compare_texts_weighted(self, text1, text2, weights: Tuple[float, float]):
         weight_sum = sum(weights)
