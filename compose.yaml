@@ -1,0 +1,13 @@
+services:
+  neo4j:
+    image: neo4j:2025.01.0
+    ports:
+      - 7687:7687
+      - 7474:7474
+    volumes:
+      - neo4j-data:/data
+    environment:
+      NEO4J_AUTH: neo4j/testtest
+
+volumes:
+  neo4j-data:
