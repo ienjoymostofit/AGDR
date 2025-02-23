@@ -10,6 +10,13 @@ This repository contains a practical implementation of the groundbreaking paper 
 - **Streaming Output**: Real-time visualization of the reasoning process
 - **Flexible Model Configuration**: Supports different LLM providers through configurable API endpoints
 
+## Examples
+
+**Prompt:** "Describe the role and stance of Sweden during World War II"
+**Iterations:** 2
+
+![Sweden during WW2, 2 iterations](images/SwedenWW2_2_Iterations_thumb.png)[Large version of image](images/SwedenWW2_2_Iterations.png)
+
 ## 🔧 Technical Architecture
 
 The system consists of three main components:

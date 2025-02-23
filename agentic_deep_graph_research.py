@@ -10,10 +10,12 @@ from pydantic import BaseModel, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from models import Entity, Relationship, KnowledgeGraphData
 
-print(f"Current working directory: {os.getcwd()}") # ADD THIS LINE
 
 # Load environment variables
 load_dotenv()
+
+THINK_BEGIN_TAG=os.environ["THINK_BEGIN_TAG"]
+THINK_END_TAG=os.environ["THINK_END_TAG"]
 
 # --- Configuration ---
 class ModelConfig(BaseModel):
@@ -31,7 +33,7 @@ class Settings(BaseSettings):
     neo4j_user: str = Field(..., validation_alias="NEO4J_USER")
     neo4j_password: str = Field(..., validation_alias="NEO4J_PASSWORD")
 
-    model_config = SettingsConfigDict(env_file=".env", extra='ignore', env_file_encoding="utf-8", env_nested_delimiter='_')
+    model_config = SettingsConfigDict(extra='ignore', env_file_encoding="utf-8", env_nested_delimiter='_')
 
 settings = Settings()  # type: ignore [call-arg]
 
@@ -141,9 +143,9 @@ class OpenAIClient:
             response = client.chat.completions.create(
                 model=model_config.model_name, # Use model name from config
                 stream=True,
-                stop="</think>",
+                stop=THINK_END_TAG,
                 messages=[
-                    {"role": "system", "content": "You MUST always output <think> content, never leave it empty!"},
+                    {"role": "system", "content": f"You MUST always output {THINK_BEGIN_TAG} content, never leave it empty!"},
                     {"role": "user", "content": prompt},
                 ],
             )
@@ -153,7 +155,7 @@ class OpenAIClient:
                 if text:
                     print(text, end="", flush=True)  # Stream output to stdout
                     content += text
-                if content.endswith("</think>"):
+                if content.endswith(THINK_END_TAG):
                     print("\nEarly stopping reasoning trace..")
                     break
             return content.strip()
