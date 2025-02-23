@@ -1,11 +1,24 @@
 # Agentic Deep Graph Reasoning Implementation
 
-This repository contains a practical implementation of the groundbreaking paper by [Markus J. Buehler](https://orcid.org/0000-0002-4173-9659) titled ["Agentic Deep Graph Reasoning"](https://arxiv.org/abs/2502.13025), which introduces a novel framework for autonomous knowledge graph expansion and refinement.
+This repository contains a simplified implementation inspired by concepts from ["Agentic Deep Graph Reasoning"](https://arxiv.org/abs/2502.13025) by [Markus J. Buehler](https://orcid.org/0000-0002-4173-9659). While the original paper presents a comprehensive framework for autonomous knowledge graph reasoning, this implementation focuses on core concepts of iterative knowledge graph expansion through language model-driven reasoning.
+
+## 📝 Scope Note
+
+This is a **simplified implementation** that:
+- Focuses on basic autonomous knowledge graph expansion
+- Implements core concepts of iterative reasoning and structured knowledge extraction
+- Provides a practical starting point for experimenting with agentic knowledge graphs
+
+Key differences from the original paper:
+- Simplified reasoning architecture
+- Basic entity and relationship extraction
+- Limited self-validation capabilities
+- Focus on practical implementation over theoretical completeness
 
 ## 🌟 Key Features
 
-- **Iterative Graph Expansion**: Autonomously grows knowledge graphs through recursive reasoning and structured knowledge extraction
-- **Multi-Model Architecture**: Leverages specialized language models for reasoning and entity extraction
+- **Basic Iterative Graph Expansion**: Grows knowledge graphs through recursive reasoning
+- **Multi-Model Architecture**: Separates reasoning and entity extraction tasks
 - **Neo4j Integration**: Persistent storage and querying of the generated knowledge graph
 - **Streaming Output**: Real-time visualization of the reasoning process
 - **Flexible Model Configuration**: Supports different LLM providers through configurable API endpoints
