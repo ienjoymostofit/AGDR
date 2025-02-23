@@ -3,3 +3,4 @@ venv
 __pycache__
 test*.txt
 old
+.DS_Store

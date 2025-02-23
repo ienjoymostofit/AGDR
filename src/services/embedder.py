@@ -2,7 +2,7 @@ import sys
 import logging
 from typing import Tuple
 from openai import OpenAI
-from settings import ModelConfig
+from core.config import ModelConfig
 
 class Embedder:
     def __init__(self, model_config: ModelConfig):
