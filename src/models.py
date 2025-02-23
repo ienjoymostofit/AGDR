@@ -1,7 +1,6 @@
 from typing import List, Dict, Any
 from pydantic import BaseModel
 
-
 class Entity(BaseModel):
     """
     Represents an entity in the knowledge graph.
@@ -16,7 +15,6 @@ class Entity(BaseModel):
     name: str
     description: str
     category: List[str]
-
 
 class Relationship(BaseModel):
     """
@@ -34,7 +32,7 @@ class Relationship(BaseModel):
     attributes: Dict[str, Any]
 
 
-class KnowledgeGraphData(BaseModel):
+class KnowledgeGraph(BaseModel):
     """
     Represents a collection of entities and relationships forming a knowledge graph.
 

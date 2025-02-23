@@ -22,6 +22,7 @@ Key differences from the original paper:
 - **Neo4j Integration**: Persistent storage and querying of the generated knowledge graph
 - **Streaming Output**: Real-time visualization of the reasoning process
 - **Flexible Model Configuration**: Supports different LLM providers through configurable API endpoints
+- **Embedding support**: Implements vector embedding for text comparison.
 
 ## Examples
 
@@ -45,6 +46,7 @@ The system consists of three main components:
 - Python 3.8+
 - Docker and Docker Compose
 - Access to OpenAI API or compatible LLM API endpoints
+- Access to a local LLM API endpoint (e.g., Ollama) is recommended for faster iteration.
 
 ### Installation
 
@@ -80,10 +82,16 @@ NEO4J_USER=neo4j
 NEO4J_PASSWORD=testtest
 
 # Reasoning Model Configuration
-REASONING_MODEL_CONFIG='{"model_name": "your-reasoning-model", "OPENAI_API_KEY": "your-key", "base_url": "your-api-url"}'
+REASONING_MODEL_CONFIG='{"model_name": "your-reasoning-model", "api_key": "your-key", "base_url": "your-api-url"}'
 
 # Entity Extraction Model Configuration
-ENTITY_EXTRACTION_MODEL_CONFIG='{"model_name": "your-extraction-model", "OPENAI_API_KEY": "your-key", "base_url": "your-api-url"}'
+ENTITY_EXTRACTION_MODEL_CONFIG='{"model_name": "your-extraction-model", "api_key": "your-key", "base_url": "your-api-url"}'
+
+# Embedding Model Configuration
+EMBEDDING_MODEL_CONFIG='{"model_name": "your-embedding-model", "api_key": "your-key", "base_url": "your-api-url"}'
+
+# Reasoning Tag Configuration.  These tags are used to extract the reasoning trace from the LLM output.
+THINK_TAGS="[\"<think>\",\"</think>\"]"
 ```
 
 #### Model Configuration Options
@@ -98,10 +106,10 @@ ENTITY_EXTRACTION_MODEL_CONFIG='{"model_name": "your-extraction-model", "OPENAI_
 
 ### Reasoning Trace Format
 
-This implementation expects the reasoning model to output its reasoning within XML-style `<think>` tags. This format is particularly suited for models like DeepSeek's distilled R1 series, which are trained to provide structured reasoning traces.
+This implementation expects the reasoning model to output its reasoning within the tags specified in the `THINK_TAGS` environment variable. This format is particularly suited for models that are trained to provide structured reasoning traces.
 
 Example expected output:
-```xml
+```
 <think>
 Okay, so I need to figure out the ...
 Now, thinking about ...
@@ -109,9 +117,9 @@ Now, thinking about ...
 ```
 
 When using custom models or different LLM providers, ensure they:
-1. Always wrap reasoning in `<think>` tags
+1. Always wrap reasoning in the configured tags.
 2. Provide structured, step-by-step reasoning
-3. End the reasoning trace with `</think>`
+3. End the reasoning trace with the closing tag.
 
 The system uses these tags to properly parse and process the reasoning trace for knowledge extraction. If your model doesn't natively support this format, you may need to modify the system prompt or post-process the output.
 
@@ -119,12 +127,12 @@ The system uses these tags to properly parse and process the reasoning trace for
 
 Run the knowledge graph generation with:
 ```bash
-python agentic_deep_graph_research.py "Your initial prompt" <number-of-iterations>
+python src/main.py "Your initial prompt" <number-of-iterations>
 ```
 
 Example:
 ```bash
-python agentic_deep_graph_research.py "Describe a way to design impact resistant materials" 3
+python src/main.py "Describe a way to design impact resistant materials" 3
 ```
 
 ## 📖 Example Prompts
@@ -142,13 +150,6 @@ Unlike traditional knowledge graph systems, this implementation follows the pape
 - Structures knowledge organically through reasoning
 - Self-validates and refines existing knowledge
 
-## 📊 Technical Components
-
-- **models.py**: Defines Pydantic models for entities and relationships
-- **agentic_deep_graph_research.py**: Core implementation of the agentic reasoning system
-- **Docker**: Neo4j containerization for graph storage
-- **Environment Configuration**: Flexible model and API setup
-
 ## 🔍 Monitoring and Debugging
 
 - Check Neo4j browser interface at `http://localhost:7474`
@@ -157,7 +158,7 @@ Unlike traditional knowledge graph systems, this implementation follows the pape
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read the contributing guidelines before submitting PRs.
+Contributions are welcome!
 
 ## 📚 Citation
 
@@ -170,3 +171,4 @@ If you use this implementation in your research, please cite the original paper:
   journal={arXiv preprint arXiv:2502.13025},
   year={2025}
 }
+```
