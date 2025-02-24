@@ -42,12 +42,12 @@ class KnowledgeGraphGenerator:
         self.embedder = embedder
 
     def generate_knowledge_graph_data(self, reasoning_trace: str, existing_entity_names_str: str = "") -> Optional[KnowledgeGraph]:
+        # The following entities already exist in the knowledge graph: {existing_entity_names_str}.  Consider these existing entities when extracting new entities and relationships.
         """Generates structured knowledge graph data using OpenAI."""
-        prompt = f"""Analyze the given content and extract all mentioned entities and relationships. Use singular MixedCase for entity names, and snake case names for relationships. Do not make up information, only refer to the content provided.
+        prompt = f"""Analyze the given content and extract all mentioned entities and relationships. Use singular MixedCase for entity names, and snake case names for relationships. Do not make up information, only refer to the content provided, and make sure to capture all entities and relationships mentioned in the reasoning trace.
 
         <content>{reasoning_trace}</content>
 
-        The following entities already exist in the knowledge graph: {existing_entity_names_str}.  Consider these existing entities when extracting new entities and relationships.
 
         Return a JSON object containing 'entities' and 'relationships' keys. The 'entities' key should contain an array of entities, each with 'name', 'description', and 'category' fields. The 'category' field should be a list of strings. The 'relationships' key should contain an array of relationships, each with 'source_entity_name', 'target_entity_name', 'relation_type', and 'attributes' fields.
 
@@ -67,32 +67,27 @@ class KnowledgeGraphGenerator:
         for i in range(max_iterations):
             logger.info(f"Starting iteration {i + 1}/{max_iterations}")
 
-            existing_entity_names = self.neo4j_client.query_node_names()
-            existing_entity_names_str = ", ".join(existing_entity_names)
-
-            longest_paths = self.neo4j_client.find_longest_paths()
-            print(f"Longest paths: {longest_paths}")
-            # Pick a random node from the longest path to start the reasoning trace
-            if longest_paths and len(longest_paths) > 0:
-                longest_path_node_names = random.choice(longest_paths)
-                print(f"Longest path nodes: {longest_path_node_names}")
-                node_name = random.choice(longest_path_node_names)
-                while node_name == previous_node_name:
-                    node_name = np.random.choice(longest_path_node_names)
-                previous_node_name = node_name
-                prompt = f"Given the concept of '{node_name}', what related concepts and relationships can be explored to expand our knowledge graph?"
-            # elif knowledge_graph_data:
-            #     logger.info("Generating next iteration prompt...")
-            #     prompt = self.openai_client.generate_prompt(knowledge_graph_data, original_prompt)
-            #     if not prompt:
-            #         logger.error("Failed to generate new prompt, stopping iterations.")
-            #         break
-            #     logger.info(f"Next prompt: {prompt}")
+            ls_paths = self.neo4j_client.find_longest_shortest_paths()
+            print(f"Longest Shortest paths: {ls_paths}")
+            # Pick a random path from the longest paths
+            if ls_paths and len(ls_paths) > 0:
+                path = random.choice(ls_paths)
+                start_node_name = path["endNodeName"]
+                start_node_description = path["endNodeDescription"]
+                if previous_node_name == start_node_name:
+                    start_node_name = path["startNodeName"]
+                    start_node_description = path["startNodeDescription"]
+                previous_node_name = start_node_name
+                prompt = f"Given the concept of '{start_node_name} ({start_node_description})', what related concepts and relationships can be explored to expand our knowledge graph?"
+                logger.info(f"Generated prompt: {prompt}")
 
             reasoning_trace = self.openai_client.generate_reasoning_trace(prompt)
             if not reasoning_trace:
                 logger.error("Failed to generate reasoning trace, stopping iterations.")
                 break
+
+            existing_entity_names = self.neo4j_client.query_node_names()
+            existing_entity_names_str = ", ".join(existing_entity_names)
 
             new_knowledge_graph_data = self.generate_knowledge_graph_data(reasoning_trace, existing_entity_names_str)
 
@@ -107,6 +102,9 @@ class KnowledgeGraphGenerator:
                     for existing_entity_name in existing_entity_names:
                         same_concept = self.embedder.is_same_concept(entity.name, existing_entity_name)
                         if same_concept:
+                            # TODO: There are cases where the descriptions are completely different,
+                            # but the names are very similar. Need to handle this somehow..
+                            # Match on the name for now
                             same_concept_entity = existing_entity_name
                             break
 

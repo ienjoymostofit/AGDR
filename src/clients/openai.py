@@ -35,14 +35,21 @@ class OpenAIClient:
                     {"role": "user", "content": prompt},
                 ],
             )
+            max_chunks = 2000
+            nchunks = 0
             content = ""
             for chunk in response:
                 text = chunk.choices[0].delta.content
                 if text:
                     print(text, end="", flush=True)  # Stream output to stdout
                     content += text
-                if content.endswith(self.think_tags[1]):
+                # Sometimes deepthinker repeats it's start tag token..
+                if content.endswith(self.think_tags[1]) or content.endswith(self.think_tags[0]):
                     print("\nEarly stopping reasoning trace..")
+                    break
+                nchunks += 1
+                if nchunks >= max_chunks:
+                    logger.warning(f"Max chunks reached for reasoning trace generation. Stopping early.")
                     break
             return content.strip()
         except openai.APIError as e:

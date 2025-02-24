@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from neo4j import GraphDatabase, Driver
 
@@ -123,13 +123,49 @@ class Neo4jClient:
         except Exception as e:
             logger.error(f"Error creating Neo4j relationship: {e}")
 
+    def find_longest_shortest_paths(self) -> List[Tuple[str, str, int]]|None:
+        def _find_longest_shortest_path_tx(tx):
+            query = """
+            MATCH (n)
+                    WHERE n.name is NOT NULL
+                    WITH collect(n) AS nodes
+                    UNWIND nodes AS start_node
+                    UNWIND nodes AS end_node
+                    WITH start_node, end_node
+                    WHERE elementId(start_node) < elementId(end_node)
+                    OPTIONAL MATCH p = shortestPath((start_node)-[*]-(end_node))
+                    WITH start_node, end_node, p
+                    WHERE p IS NOT NULL // Filter out pairs with no connecting path
+                    RETURN
+                        start_node.name AS startNodeName,
+                        start_node.description as startNodeDescription,
+                        end_node.name AS endNodeName,
+                        end_node.description as endNodeDescription,
+                        length(p) AS shortestPathLength
+                    ORDER BY shortestPathLength DESC
+                    LIMIT 5
+            """
+            logging.info(f"query: {query}")
+            result = tx.run(query)
+            results = []
+            for record in result:
+                results.append(record)
+                # results.append((record["startNodeName"], record["endNodeName"], record["shortestPathLength"]))
+            return results
+        try:
+            with self._driver.session() as session:
+                return session.execute_read(_find_longest_shortest_path_tx)
+        except Exception as e:
+            logger.error(f"Error finding the longest path in Neo4j: {e}")
+            return None
+
     def find_longest_paths(self) -> List[str]:
         """Finds the longest path in the Neo4j graph and returns a list of node IDs."""
         def _find_longest_path_tx(tx):
             query = """
-            MATCH p = (n)-[*]->(m)
-            ORDER BY length(p) DESC
-            LIMIT 3
+            MATCH p = (n)-[*..5]->(m)
+            ORDER BY rand() DESC
+            LIMIT 9
             RETURN [node in nodes(p) | node.name] AS nodeNames, length(p) AS pathLength
             """
             logging.info(f"query: {query}")
