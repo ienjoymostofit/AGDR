@@ -9,8 +9,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src'
 from core.config import Settings
 from clients.neo4j import Neo4jClient
 from clients.openai import OpenAIClient
+from clients.pgvector import PgVectorClient
 from services.knowledge_graph_generator import KnowledgeGraphGenerator
 from services.embedder import Embedder
+from services.pgvector_service import PgVectorService
+from services.entity_service import EntityService
 
 def main():
     """
@@ -40,9 +43,21 @@ def main():
     # Initialize Clients
     openai_client = OpenAIClient(SETTINGS.think_tags, SETTINGS.reasoning_model_config, SETTINGS.entity_extraction_model_config)
     neo4j_client = Neo4jClient(SETTINGS.neo4j_uri, SETTINGS.neo4j_user, SETTINGS.neo4j_password)
+    pgvector_client = PgVectorClient(
+        dbname=SETTINGS.pgvector_dbname,
+        user=SETTINGS.pgvector_user,
+        password=SETTINGS.pgvector_password,
+        host=SETTINGS.pgvector_host,
+        port=SETTINGS.pgvector_port,
+        table_name=SETTINGS.pgvector_table_name,
+        vector_dimension=SETTINGS.pgvector_vector_dimension,
+    )
     embedder = Embedder(SETTINGS.embedding_model_config)
-    kg_generator = KnowledgeGraphGenerator(openai_client, neo4j_client, embedder)
+    pgvector_service = PgVectorService(pgvector_client, embedder)
+    entity_service = EntityService(pgvector_service, neo4j_client, embedder)
+    kg_generator = KnowledgeGraphGenerator(openai_client, entity_service)
 
+    pgvector_service.pgvector_client.connect()
     try:
         kg_generator.run_kg_generation_iterations(initial_prompt, max_iterations)
     except Exception as e:

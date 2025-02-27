@@ -9,5 +9,17 @@ services:
     environment:
       NEO4J_AUTH: neo4j/testtest
 
+  postgres:
+    image: pgvector/pgvector:pg17
+    ports:
+      - "54321:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
 volumes:
   neo4j-data:
+  postgres-data:

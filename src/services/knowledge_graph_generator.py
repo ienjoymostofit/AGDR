@@ -1,11 +1,9 @@
 import logging
-from typing import Dict, List, Optional
-import numpy as np
-from core.models import Entity, KnowledgeGraph, Relationship
-from clients.neo4j import Neo4jClient
 from clients.openai import OpenAIClient
-from services.embedder import Embedder  # Import Embedder
 import random
+from services.entity_service import EntityService
+from typing import Optional
+from core.models import KnowledgeGraph
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +33,10 @@ EXAMPLE_JSON_STR = """
 class KnowledgeGraphGenerator:
     """Orchestrates the knowledge graph generation process."""
 
-    def __init__(self, openai_client: OpenAIClient, neo4j_client: Neo4jClient, embedder: Embedder):
-        """Initializes the KnowledgeGraphGenerator with the specified clients."""
+    def __init__(self, openai_client: OpenAIClient, entity_service: EntityService):
+        """Initializes the KnowledgeGraphGenerator with OpenAIClient and EntityService."""
         self.openai_client = openai_client
-        self.neo4j_client = neo4j_client
-        self.embedder = embedder
+        self.entity_service = entity_service
 
     def generate_knowledge_graph_data(self, reasoning_trace: str, existing_entity_names_str: str = "") -> Optional[KnowledgeGraph]:
         # The following entities already exist in the knowledge graph: {existing_entity_names_str}.  Consider these existing entities when extracting new entities and relationships.
@@ -62,14 +59,13 @@ class KnowledgeGraphGenerator:
         knowledge_graph_data: Optional[KnowledgeGraph] = None
 
         prompt = initial_prompt
-        # original_prompt = initial_prompt  # Keep original prompt for context in new prompt generation
         previous_node_name = None
         for i in range(max_iterations):
             logger.info(f"Starting iteration {i + 1}/{max_iterations}")
 
-            ls_paths = self.neo4j_client.find_longest_shortest_paths()
+            ls_paths = self.entity_service.find_longest_shortest_paths()
             print(f"Longest Shortest paths: {ls_paths}")
-            # Pick a random path from the longest paths
+            # Pick a random path from the longest shortest paths
             if ls_paths and len(ls_paths) > 0:
                 path = random.choice(ls_paths)
                 start_node_name = path["endNodeName"]
@@ -86,7 +82,7 @@ class KnowledgeGraphGenerator:
                 logger.error("Failed to generate reasoning trace, stopping iterations.")
                 break
 
-            existing_entity_names = self.neo4j_client.query_node_names()
+            existing_entity_names = self.entity_service.get_entity_names()
             existing_entity_names_str = ", ".join(existing_entity_names)
 
             new_knowledge_graph_data = self.generate_knowledge_graph_data(reasoning_trace, existing_entity_names_str)
@@ -100,7 +96,7 @@ class KnowledgeGraphGenerator:
                     # Check for similar entities and potentially update the entity name
                     same_concept_entity = None
                     for existing_entity_name in existing_entity_names:
-                        same_concept = self.embedder.is_same_concept(entity.name, existing_entity_name)
+                        same_concept = self.entity_service.is_same_concept(entity.name, existing_entity_name)
                         if same_concept:
                             # TODO: There are cases where the descriptions are completely different,
                             # but the names are very similar. Need to handle this somehow..
@@ -112,10 +108,11 @@ class KnowledgeGraphGenerator:
                         logger.info(f"Entity '{entity.name}' is similar to existing entity '{same_concept_entity}' Updating name.")
                         entity.name = same_concept_entity  # Update the entity name
 
-                    node_id = self.neo4j_client.create_node(entity)
+                    node_id = self.entity_service.create_entity_node(entity)
                     if node_id:
                         entity.id = node_id
                         logger.info(f"Entity '{entity.name}', Neo4j ID: {node_id}")
+                        self.entity_service.embed_entity(entity.name, entity.description) # Embed entity after node creation
                     else:
                         logger.warning(f"Failed to create Neo4j node for entity '{entity.name}'. Skipping relationships for this entity.")
 
@@ -124,7 +121,7 @@ class KnowledgeGraphGenerator:
                     logger.info(
                         f"Mapping relationship: Source {relationship.source_entity_name}, Target {relationship.target_entity_name}"
                     )
-                    self.neo4j_client.create_relationship(relationship)
+                    self.entity_service.create_relationship(relationship) # Still using neo4j_client directly for relationships
 
                 knowledge_graph_data = new_knowledge_graph_data
 

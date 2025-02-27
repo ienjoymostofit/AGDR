@@ -35,7 +35,7 @@ class OpenAIClient:
                     {"role": "user", "content": prompt},
                 ],
             )
-            max_chunks = 2000
+            max_chunks = 200
             nchunks = 0
             content = ""
             for chunk in response:
