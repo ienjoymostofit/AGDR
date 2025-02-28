@@ -10,6 +10,7 @@ class ModelConfig(BaseModel):
     model_name: Annotated[str, Field(description="The name of the language model to use.")]
     api_key: Annotated[str, Field(description="The API key for accessing the language model.")]
     base_url: Annotated[str, Field(description="The base URL for the language model API.")]
+    prefix_message: Annotated[str, Field(default='', description="The message to prepend to the prompt (.e '{\"role\": \"control\", \"content\": \"thinking\"}' for granite thinking mode).")]
 
 class Settings(BaseSettings):
     """Settings for the knowledge graph generation application."""
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     reasoning_model_config: Annotated[ModelConfig, Field(description="Configuration for the reasoning model.")]
     entity_extraction_model_config: Annotated[ModelConfig, Field(description="Configuration for the entity extraction model.")]
     embedding_model_config: Annotated[ModelConfig, Field(description="Configuration for the embedding model.")]
+    conflict_resolution_model_config: Annotated[ModelConfig, Field(description="Configuration for the conflict resolution model.")]
     neo4j_uri: Annotated[str, Field(description="The URI for the Neo4j database.")]
     neo4j_user: Annotated[str, Field(description="The username for the Neo4j database.")]
     neo4j_password: Annotated[str, Field(description="The password for the Neo4j database.")]

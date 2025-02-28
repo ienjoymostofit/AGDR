@@ -1,3 +1,4 @@
+# Export the full neo4j graph db as a dot file
 from neo4j import GraphDatabase
 from core.config import Settings
 import os
@@ -5,10 +6,6 @@ import sys
 import re
 
 from dotenv import load_dotenv
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
-
-load_dotenv()
 
 
 class GraphExtractor:
@@ -83,6 +80,10 @@ class GraphExtractor:
 
 
 if __name__ == "__main__":
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
+
+    load_dotenv()
+
     settings = Settings()
     # Replace these variables with your Neo4j connection details
     uri =settings.neo4j_uri

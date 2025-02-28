@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from neo4j import GraphDatabase, Driver
 
@@ -44,6 +44,34 @@ class Neo4jClient:
         else:
             logger.warning("Neo4j driver already closed or not initialized.")
 
+    def update_node_name_and_description(self, old_name, new_name: str, description: str) -> None:
+        """Updates the name and description of a node in Neo4j."""
+        def _update_node_name_and_description_tx(tx, old_name: str, new_name: str, description: str):
+            query = "MATCH (n {name: $old_name}) SET n.description = $description", "SET n.name = $name"
+            tx.run(query, old_name=old_name, name=new_name, description=description)
+
+        try:
+            with self._driver.session() as session:
+                session.execute_write(_update_node_name_and_description_tx, old_name, new_name, description)
+        except Exception as e:
+            logger.error(f"Error updating node name and description in Neo4j: {e}")
+
+    def get_node_by_name(self, name: str) -> Optional[Entity]:
+        """Retrieves a node from Neo4j by its name."""
+        def _get_node_by_name_tx(tx, name: str):
+            query = "MATCH (n {name: $name}) RETURN n"
+            result = tx.run(query, name=name).single()
+            if result:
+                return Entity(id=str(result["n"].id), name=result["n"]["name"], description=result["n"]["description"], category=result["n"].labels)
+            return None
+
+        try:
+            with self._driver.session() as session:
+                return session.execute_read(_get_node_by_name_tx, name)
+        except Exception as e:
+            logger.error(f"Error getting node by name from Neo4j: {e}")
+            return None
+
     def query_node_names(self) -> List[str]:
         """Queries Neo4j for all node names."""
 
@@ -59,6 +87,28 @@ class Neo4jClient:
                 return names
         except Exception as e:
             logger.error(f"Error querying node names from Neo4j: {e}")
+            return []
+
+    def get_subgraph(self, node_name: str, depth: int = 1) -> Any:
+        """Queries for a subgraph around a given node name up to a certain depth."""
+
+        def _get_subgraph_tx(tx, node_name: str, depth: int):
+            query = """
+            MATCH (n)-[r*1..1]-(m)
+            WHERE n.name = $node_name
+            RETURN n,r,m
+            """
+            result = tx.run(query, node_name=node_name, depth=depth)
+            records = []
+            for record in result:
+                records.append(record)
+            return records
+
+        try:
+            with self._driver.session() as session:
+                return session.execute_read(_get_subgraph_tx, node_name, depth)
+        except Exception as e:
+            logger.error(f"Error getting subgraph from Neo4j: {e}")
             return []
 
     def create_node(self, entity: Entity) -> Optional[str]:

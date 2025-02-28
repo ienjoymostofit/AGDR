@@ -12,7 +12,7 @@ from clients.openai import OpenAIClient
 from clients.pgvector import PgVectorClient
 from services.knowledge_graph_generator import KnowledgeGraphGenerator
 from services.embedder import Embedder
-from services.pgvector_service import PgVectorService
+from services.embed_service import EmbedService
 from services.entity_service import EntityService
 
 def main():
@@ -41,7 +41,7 @@ def main():
         sys.exit(1)
 
     # Initialize Clients
-    openai_client = OpenAIClient(SETTINGS.think_tags, SETTINGS.reasoning_model_config, SETTINGS.entity_extraction_model_config)
+    openai_client = OpenAIClient(SETTINGS.think_tags, SETTINGS.reasoning_model_config, SETTINGS.entity_extraction_model_config, SETTINGS.conflict_resolution_model_config)
     neo4j_client = Neo4jClient(SETTINGS.neo4j_uri, SETTINGS.neo4j_user, SETTINGS.neo4j_password)
     pgvector_client = PgVectorClient(
         dbname=SETTINGS.pgvector_dbname,
@@ -53,8 +53,8 @@ def main():
         vector_dimension=SETTINGS.pgvector_vector_dimension,
     )
     embedder = Embedder(SETTINGS.embedding_model_config)
-    pgvector_service = PgVectorService(pgvector_client, embedder)
-    entity_service = EntityService(pgvector_service, neo4j_client, embedder)
+    pgvector_service = EmbedService(pgvector_client, embedder)
+    entity_service = EntityService(pgvector_service, neo4j_client)
     kg_generator = KnowledgeGraphGenerator(openai_client, entity_service)
 
     pgvector_service.pgvector_client.connect()
