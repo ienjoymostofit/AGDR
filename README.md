@@ -28,9 +28,17 @@ Key characteristics:
 ## Examples
 
 **Prompt:** "Describe the role and stance of Sweden during World War II"
+
 **Iterations:** 2
 
 ![Sweden during WW2, 2 iterations](images/SwedenWW2_2_Iterations_thumb.png)[Large version of image](images/SwedenWW2_2_Iterations.png)
+
+
+**Prompt:** "Describe a way to design impact resistant materials"
+
+**Iterations:** 100+
+
+![Large Knowledge Graph](images/LargeGraph.thumb.png)[Large version of image](images/LargeGraph.png)
 
 ## 🔧 Technical Architecture
 
