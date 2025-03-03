@@ -13,12 +13,13 @@ Key characteristics:
 
 ## 🌟 Key Features
 
-- **Iterative Graph Expansion**: Grows knowledge graphs through recursive reasoning.
-- **Multi-Model Architecture**: Separates reasoning and entity extraction tasks using configurable models.
-- **Neo4j Integration**: Persistent storage and querying of the generated knowledge graph.
-- **Streaming Output**: Real-time visualization of the reasoning process.
-- **Flexible Model Configuration**: Supports different LLM providers through configurable API endpoints.
-- **Embedding support**: Implements vector embedding for text comparison.
+- **Iterative Graph Expansion**: Grows knowledge graphs through recursive reasoning, exploring related concepts over multiple iterations.
+- **Multi-Model Architecture**:  Leverages separate language models for reasoning, entity extraction, and conflict resolution, each configurable for optimal performance.
+- **Neo4j Integration**: Provides persistent storage and querying of the generated knowledge graph using Neo4j.
+- **Streaming Output**: Displays the reasoning process in real-time, providing insights into the knowledge graph generation.
+- **Flexible Model Configuration**: Supports different LLM providers through configurable API endpoints, including OpenAI and local models via Ollama.
+- **Vector Embedding**: Implements vector embeddings using pgvector for semantic similarity comparisons and conflict resolution.
+- **Conflict Resolution**:  Addresses potential conflicts between existing and new entities using an LLM-driven conflict resolution service.
 
 ## Examples
 
@@ -29,19 +30,22 @@ Key characteristics:
 
 ## 🔧 Technical Architecture
 
-The system consists of three main components:
+The system consists of several key components:
 
-1. **Reasoning Engine**: Generates detailed reasoning traces about a given topic using a configured language model.
-2. **Knowledge Extractor**: Converts unstructured reasoning into graph-structured data (entities and relationships).
-3. **Graph Manager**: Handles Neo4j database operations, including creating nodes and relationships.
+1.  **Reasoning Service**: Generates detailed reasoning traces about a given topic using a configured language model.
+2.  **Knowledge Extractor Service**: Converts unstructured reasoning into graph-structured data (entities and relationships) based on a defined prompt.
+3.  **Graph Population Service**: Handles Neo4j database operations, including creating nodes and relationships, and manages potential conflicts.
+4.  **Embedding Service**: Provides vector embeddings for entities, enabling similarity searches and conflict resolution.
+5.  **Conflict Resolution Service**: Resolves conflicts between existing and new entities using an LLM.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.8+
-- Docker and Docker Compose (for Neo4j)
+- Docker and Docker Compose (for Neo4j and optionally pgvector)
 - Access to OpenAI API or a compatible LLM API endpoint (e.g., Ollama).
+- A running PostgreSQL instance with the `pgvector` extension enabled.
 - Access to a local LLM API endpoint (e.g., Ollama) is recommended for faster iteration, especially for the reasoning and embedding models.
 
 ### Installation
@@ -59,8 +63,28 @@ pip install -r requirements.txt
 
 3. Start Neo4j:
 ```bash
-docker-compose up -d
+docker-compose up -d neo4j  # Only start Neo4j
 ```
+
+4.  **Set up PostgreSQL with pgvector:**
+
+    *   If you don't have a PostgreSQL instance, you can use Docker:
+
+        ```bash
+        docker-compose up -d postgres
+        ```
+
+    *   Connect to your PostgreSQL instance (e.g., using `psql`):
+
+        ```bash
+        psql -h localhost -U youruser -d yourdatabase
+        ```
+
+    *   Create the `pgvector` extension:
+
+        ```sql
+        CREATE EXTENSION vector;
+        ```
 
 ### Configuration
 
@@ -78,19 +102,31 @@ NEO4J_USER=neo4j
 NEO4J_PASSWORD=testtest
 
 # Reasoning Model Configuration
-REASONING_MODEL_CONFIG='{"model_name": "openthinker:7b-q8_0", "api_key": "dummy", "base_url": "http://localhost:11434/v1/"}'
+REASONING_MODEL_CONFIG='{"model_name": "openthinker:7b-q8_0", "api_key": "dummy", "base_url": "http://localhost:11434/v1/", "prefix_message": ""}'
 
 # Entity Extraction Model Configuration
-ENTITY_EXTRACTION_MODEL_CONFIG='{"model_name": "gpt-4o-mini", "api_key": "sk---", "base_url": "https://api.openai.com/v1/"}'
+ENTITY_EXTRACTION_MODEL_CONFIG='{"model_name": "gpt-4o-mini", "api_key": "sk---", "base_url": "https://api.openai.com/v1/", "prefix_message": ""}'
 
 # Embedding Model Configuration
-EMBEDDING_MODEL_CONFIG='{"model_name": "granite-embedding:30m-en-fp16", "api_key": "dummy", "base_url": "http://localhost:11434/v1/"}'
+EMBEDDING_MODEL_CONFIG='{"model_name": "granite-embedding:30m-en-fp16", "api_key": "dummy", "base_url": "http://localhost:11434/v1/", "prefix_message": ""}'
+
+# Conflict Resolution Model Configuration
+CONFLICT_RESOLUTION_MODEL_CONFIG='{"model_name": "gpt-4o-mini", "api_key": "sk---", "base_url": "https://api.openai.com/v1/", "prefix_message": ""}'
 
 # Reasoning Tag Configuration.  These tags are used to extract the reasoning trace from the LLM output.
 # For deepscaler models:
 #THINK_TAGS="[\"<think>\",\"</think>\"]"
 # For openthinker models:
 THINK_TAGS="[\"<|begin_of_thought|>\",\"<|end_of_thought|>\"]"
+
+# PgVector Configuration
+PGVECTOR_DBNAME=yourdatabase
+PGVECTOR_USER=youruser
+PGVECTOR_PASSWORD=yourpassword
+PGVECTOR_HOST=localhost
+PGVECTOR_PORT=5432
+PGVECTOR_TABLE_NAME=entity_embeddings
+PGVECTOR_VECTOR_DIMENSION=1536
 ```
 
 #### Model Configuration Options
@@ -99,17 +135,20 @@ THINK_TAGS="[\"<|begin_of_thought|>\",\"<|end_of_thought|>\"]"
   - `base_url`: "https://api.openai.com/v1/"
   - `model_name`: "gpt-4", "gpt-3.5-turbo", "gpt-4o-mini", etc.
   - `api_key`: Your OpenAI API key.
+  - `prefix_message`: Optional message to prepend to the prompt.
 
 - For local models (e.g., Ollama):
   - `base_url`: "http://localhost:11434/v1/"
   - `model_name`: The name of the model you have pulled from Ollama (e.g., "llama2", "mistral", "openthinker:7b-q8_0", "granite-embedding:30m-en-fp16", etc.).
   - `api_key`:  A dummy value like "dummy" can be used.
+  - `prefix_message`: Optional message to prepend to the prompt.
 
 **Important notes on model configuration:**
 
-*   The `REASONING_MODEL_CONFIG` and `ENTITY_EXTRACTION_MODEL_CONFIG` settings define which models are used for reasoning and entity extraction, respectively. You can use different models for these tasks.
+*   The `REASONING_MODEL_CONFIG`, `ENTITY_EXTRACTION_MODEL_CONFIG`, and `CONFLICT_RESOLUTION_MODEL_CONFIG` settings define which models are used for reasoning, entity extraction, and conflict resolution, respectively. You can use different models for these tasks.
 *   The `EMBEDDING_MODEL_CONFIG` specifies the model used for generating text embeddings.
 *   Different models may require different reasoning tag formats. Ensure that the `THINK_TAGS` setting is correctly configured to match the output format of your reasoning model. Refer to the model's documentation for the correct tags. Some example configurations are provided in the `.env.example` file.
+*   The `prefix_message` field in the model configurations allows you to prepend a message to the prompt. This can be useful for models that require a specific prefix to function correctly.
 
 ### Reasoning Trace Format
 
@@ -148,6 +187,13 @@ python src/application.py "Describe a way to design impact resistant materials" 
 - "Describe the role and stance of Sweden during World War II"
 - "Explain how photosynthesis works in plants"
 
+## ⚙️ Utilities
+
+The `utilities` directory contains helpful scripts:
+
+*   `extract_to_dot.py`: Exports the knowledge graph from Neo4j to a `.dot` file for visualization using Graphviz.
+*   `re_embed_pgvector.py`: Re-embeds all entities in the pgvector database.  Useful after changing the embedding model.
+
 ## 🎯 Core Innovation
 
 Unlike traditional knowledge graph systems, this implementation follows an agentic approach where the system:
@@ -162,6 +208,7 @@ Unlike traditional knowledge graph systems, this implementation follows an agent
 - View logging output in real-time during execution in the console.
 - Monitor entity and relationship creation in the console output.
 - Examine the generated knowledge graph in Neo4j to verify the accuracy and completeness of the extracted information.
+- Monitor pgvector database for embeddings.
 
 ## 🤝 Contributing
 
@@ -178,4 +225,5 @@ If you use this implementation in your research, please cite the original paper:
   journal={arXiv preprint arXiv:2502.13025},
   year={2025}
 }
+```
 ```
