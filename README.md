@@ -75,7 +75,7 @@ pip install -r requirements.txt
 
 3. Start Neo4j and pgvector using Docker Compose:
 ```bash
-docker-compose up -d   # Only start Neo4j
+docker-compose up -d
 ```
 
 4.  **Set up PostgreSQL with pgvector:**
