@@ -2,14 +2,15 @@ import logging
 import psycopg2
 import numpy as np
 from pgvector.psycopg2 import register_vector
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Any
 
 from core.models import Entity
+from core.interfaces import VectorDatabase
 
 logger = logging.getLogger(__name__)
 
-class PgVectorClient:
-    """Client for interacting with PostgreSQL with pgvector extension."""
+class PgVectorClient(VectorDatabase):
+    """Client for interacting with PostgreSQL with pgvector extension that implements the VectorDatabase interface."""
 
     def __init__(self, dbname, user, password, host, port, table_name="entity_embeddings", vector_dimension=1536):
         """

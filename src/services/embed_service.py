@@ -1,43 +1,42 @@
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Any
 import numpy as np
 
-from clients.pgvector import PgVectorClient
-from services.embedder import Embedder
+from core.interfaces import VectorDatabase, EmbeddingProvider
 
 logger = logging.getLogger(__name__)
 
 class EmbedService:
-    """Service for embedding and similarity search using PgVector."""
+    """Service for embedding and similarity search using vector database."""
 
-    def __init__(self, pgvector_client: PgVectorClient, embedder: Embedder):
+    def __init__(self, vector_db: VectorDatabase, embedding_provider: EmbeddingProvider):
         """
-        Initializes the PgVectorService with PgVectorClient and Embedder instances.
-        Performs initialization of PgVectorClient (connects, creates extension and table).
+        Initializes the EmbedService with a VectorDatabase and EmbeddingProvider instances.
+        Performs initialization of the vector database (connects, creates extension and table).
         """
-        self.pgvector_client = pgvector_client
-        self.embedder = embedder
-        # Initialize the PgVectorClient
+        self.vector_db = vector_db
+        self.embedding_provider = embedding_provider
+        # Initialize the vector database
         try:
-            self.pgvector_client.connect()
-            self.pgvector_client.create_extension()
-            self.pgvector_client.create_table()
-            logger.info("PgVectorClient initialized successfully.")
+            self.vector_db.connect()
+            self.vector_db.create_extension()
+            self.vector_db.create_table()
+            logger.info("Vector database initialized successfully.")
         except Exception as e:
-            logger.error(f"Failed to initialize PgVectorClient: {e}")
+            logger.error(f"Failed to initialize vector database: {e}")
             raise
 
     def embed_entity(self, entity_name: str, description: str) -> Optional[List[float]]:
         """Embeds an entity description and stores it in PgVector."""
-        if not self.pgvector_client.is_connected():
-            logger.error("PgVectorClient is not connected.")
+        if not self.vector_db.is_connected():
+            logger.error("Vector database is not connected.")
             return None
         try:
-            entity_name_embedding = self.embedder.get_embedding(entity_name)
-            description_embedding = self.embedder.get_embedding(description)
+            entity_name_embedding = self.embedding_provider.get_embedding(entity_name)
+            description_embedding = self.embedding_provider.get_embedding(description)
 
             if entity_name_embedding and description_embedding:
-                self.pgvector_client.insert_embedding(
+                self.vector_db.insert_embedding(
                     entity_name,
                     np.array(entity_name_embedding),
                     description,
@@ -54,11 +53,11 @@ class EmbedService:
 
     def remove_entity(self, entity_name: str) -> bool:
         """Removes an entity embedding from PgVector."""
-        if not self.pgvector_client.is_connected():
-            logger.error("PgVectorClient is not connected.")
+        if not self.vector_db.is_connected():
+            logger.error("Vector database is not connected.")
             return False
         try:
-            self.pgvector_client.delete_embedding(entity_name)
+            self.vector_db.delete_embedding(entity_name)
             logger.info(f"Embedding removed for entity: {entity_name}")
             return True
         except Exception as e:
@@ -71,13 +70,13 @@ class EmbedService:
 
         Returns a list of tuples, where each tuple contains (entity_name, description, distance).
         """
-        if not self.pgvector_client.is_connected():
-            logger.error("PgVectorClient is not connected.")
+        if not self.vector_db.is_connected():
+            logger.error("Vector database is not connected.")
             return None
         try:
-            name_embedding = self.embedder.get_embedding(entity_name)
+            name_embedding = self.embedding_provider.get_embedding(entity_name)
             if name_embedding:
-                similar_entities = self.pgvector_client.get_nearest_neighbors_by_entity_name(np.array(name_embedding), limit=limit)
+                similar_entities = self.vector_db.get_nearest_neighbors_by_entity_name(np.array(name_embedding), limit=limit)
                 if similar_entities:
                     logger.info(f"Found {len(similar_entities)} similar entities by name for: {entity_name}")
                     return similar_entities
@@ -97,13 +96,13 @@ class EmbedService:
 
         Returns a list of tuples, where each tuple contains (entity_name, description, distance).
         """
-        if not self.pgvector_client.is_connected():
-            logger.error("PgVectorClient is not connected.")
+        if not self.vector_db.is_connected():
+            logger.error("Vector database is not connected.")
             return None
         try:
-            description_embedding = self.embedder.get_embedding(description)
+            description_embedding = self.embedding_provider.get_embedding(description)
             if description_embedding:
-                similar_entities = self.pgvector_client.get_nearest_neighbors_by_description(np.array(description_embedding), limit=limit)
+                similar_entities = self.vector_db.get_nearest_neighbors_by_description(np.array(description_embedding), limit=limit)
                 if similar_entities:
                     logger.info(f"Found {len(similar_entities)} similar entities for: {entity_name}")
                     return similar_entities

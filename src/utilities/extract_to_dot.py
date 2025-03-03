@@ -1,29 +1,36 @@
-# Export the full neo4j graph db as a dot file
-from neo4j import GraphDatabase
-from core.config import Settings
+# Export the full graph database as a dot file
 import os
 import sys
 import re
-
 from dotenv import load_dotenv
+
+from core.config import Settings
+from core.factory import ServiceFactory
+from core.interfaces import GraphDatabase
 
 
 class GraphExtractor:
-    def __init__(self, uri, user, password):
-        self.driver = GraphDatabase.driver(uri, auth=(user, password))
+    def __init__(self, graph_db: GraphDatabase):
+        self.graph_db = graph_db
 
     def close(self):
-        self.driver.close()
+        self.graph_db.close()
 
     def extract_graph(self):
-        cypher_query = """
-        MATCH (n)
-        OPTIONAL MATCH (n)-[r]->(m)
-        RETURN n.name AS name, n.description AS description, type(r) AS relationshipType, m.name AS connectedNodeName
-        """
-        with self.driver.session() as session:
-            result = session.run(cypher_query)
-            return list(result)
+        # For this utility, we need to adapt the raw query capability
+        # This is a limitation of our interface for this specific use case
+        # In a real-world application, we'd extend the GraphDatabase interface
+        # to include this kind of raw query capability
+        if hasattr(self.graph_db, '_driver'):
+            with self.graph_db._driver.session() as session:
+                result = session.run("""
+                    MATCH (n)
+                    OPTIONAL MATCH (n)-[r]->(m)
+                    RETURN n.name AS name, n.description AS description, type(r) AS relationshipType, m.name AS connectedNodeName
+                """)
+                return list(result)
+        else:
+            raise NotImplementedError("The graph database implementation doesn't provide direct query access")
 
     def sanitize_identifier(self, name):
         # Remove special characters, replace spaces with underscores
@@ -85,15 +92,16 @@ if __name__ == "__main__":
     load_dotenv()
 
     settings = Settings()
-    # Replace these variables with your Neo4j connection details
-    uri =settings.neo4j_uri
-    user = settings.neo4j_user
-    password = settings.neo4j_password
-
-    extractor = GraphExtractor(uri, user, password)
+    # Initialize service factory
+    service_factory = ServiceFactory(settings)
+    
+    # Get the graph database through the factory
+    graph_db = service_factory.get_graph_database()
+    
+    extractor = GraphExtractor(graph_db)
     try:
         data = extractor.extract_graph()
         mermaid_output = extractor.to_dot(data)
         extractor.save_to_file(mermaid_output, "graph.dot")
     finally:
-        extractor.close()
+        service_factory.close_all()

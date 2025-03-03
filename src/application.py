@@ -7,13 +7,7 @@ from dotenv import load_dotenv
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 from core.config import Settings
-from clients.neo4j import Neo4jClient
-from clients.openai import OpenAIClient
-from clients.pgvector import PgVectorClient
-from services.knowledge_graph_generator import KnowledgeGraphGenerator
-from services.embedder import Embedder
-from services.embed_service import EmbedService
-from services.entity_service import EntityService
+from core.factory import ServiceFactory
 
 def main():
     """
@@ -40,24 +34,12 @@ def main():
         print("Error: Iterations must be a positive integer.")
         sys.exit(1)
 
-    # Initialize Clients
-    openai_client = OpenAIClient(SETTINGS.think_tags, SETTINGS.reasoning_model_config, SETTINGS.entity_extraction_model_config, SETTINGS.conflict_resolution_model_config)
-    neo4j_client = Neo4jClient(SETTINGS.neo4j_uri, SETTINGS.neo4j_user, SETTINGS.neo4j_password)
-    pgvector_client = PgVectorClient(
-        dbname=SETTINGS.pgvector_dbname,
-        user=SETTINGS.pgvector_user,
-        password=SETTINGS.pgvector_password,
-        host=SETTINGS.pgvector_host,
-        port=SETTINGS.pgvector_port,
-        table_name=SETTINGS.pgvector_table_name,
-        vector_dimension=SETTINGS.pgvector_vector_dimension,
-    )
-    embedder = Embedder(SETTINGS.embedding_model_config)
-    pgvector_service = EmbedService(pgvector_client, embedder)
-    entity_service = EntityService(pgvector_service, neo4j_client)
-    kg_generator = KnowledgeGraphGenerator(openai_client, entity_service)
-
-    pgvector_service.pgvector_client.connect()
+    # Initialize service factory
+    service_factory = ServiceFactory(SETTINGS)
+    
+    # Get the knowledge graph generator through the factory
+    kg_generator = service_factory.get_knowledge_graph_generator()
+    
     try:
         kg_generator.run_kg_generation_iterations(initial_prompt, max_iterations)
     except Exception as e:
@@ -65,7 +47,8 @@ def main():
         print(f"An unexpected error occurred: {e}")
         sys.exit(2)
     finally:
-        neo4j_client.close()
+        # Clean up all resources
+        service_factory.close_all()
         logger.info("Application finished.")
 
 

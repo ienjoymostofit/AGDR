@@ -1,15 +1,16 @@
 import logging
 from typing import Any, List, Optional, Tuple
 
-from neo4j import GraphDatabase, Driver
+from neo4j import GraphDatabase as Neo4jDriver, Driver
 
 from core.models import Entity, Relationship
+from core.interfaces import GraphDatabase
 
 logger = logging.getLogger(__name__)
 
 
-class Neo4jClient:
-    """Client for interacting with the Neo4j database."""
+class Neo4jClient(GraphDatabase):
+    """Client for interacting with the Neo4j database that implements the GraphDatabase interface."""
 
     def __init__(self, uri: str, user: str, password: str):
         """Initializes the Neo4j client with connection details."""
@@ -18,7 +19,7 @@ class Neo4jClient:
         self.password = password
         self._driver: Driver | None = None
         try:
-            self._driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
+            self._driver = Neo4jDriver.driver(self.uri, auth=(self.user, self.password))
             self.verify_connection()
             logger.info("Successfully connected to Neo4j.")
         except Exception as e:

@@ -1,11 +1,12 @@
 import sys
 import logging
-from typing import Tuple
+from typing import Tuple, Any
 from openai import OpenAI
 from core.config import ModelConfig
 import Levenshtein
+from core.interfaces import EmbeddingProvider
 
-class Embedder:
+class Embedder(EmbeddingProvider):
     def __init__(self, model_config: ModelConfig):
         self.client = OpenAI(base_url=model_config.base_url, api_key=model_config.api_key)
         self.model_config = model_config

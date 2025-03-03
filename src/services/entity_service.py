@@ -1,7 +1,7 @@
 import logging
 from typing import Any, List, Tuple, Optional
 
-from clients.neo4j import Neo4jClient
+from core.interfaces import GraphDatabase
 from services.embed_service import EmbedService
 from core.models import Entity, KnowledgeGraph, Relationship
 
@@ -12,25 +12,25 @@ class EntityService:
     Service for managing entities, including embedding, similarity search, and storage in Neo4j and PgVector.
     """
 
-    def __init__(self, pgvector_service: EmbedService, neo4j_client: Neo4jClient):
+    def __init__(self, embed_service: EmbedService, graph_db: GraphDatabase):
         """
-        Initializes the EntityService with PgVectorService and Neo4jClient instances.
+        Initializes the EntityService with EmbedService and GraphDatabase instances.
         """
-        self.pgvector_service = pgvector_service
-        self.neo4j_client = neo4j_client
+        self.embed_service = embed_service
+        self.graph_db = graph_db
 
     def update_entity(self, old_name:str, new_name: str, description: str):
-        """Updates an entity description and stores it using PgVectorService."""
-        self.pgvector_service.embed_entity(new_name, description)
-        self.neo4j_client.update_node_name_and_description(old_name, new_name, description)
+        """Updates an entity description and stores it using EmbedService."""
+        self.embed_service.embed_entity(new_name, description)
+        self.graph_db.update_node_name_and_description(old_name, new_name, description)
 
     def embed_entity(self, entity_name: str, description: str):
-        """Embeds an entity description and stores it using PgVectorService."""
-        self.pgvector_service.embed_entity(entity_name, description)
+        """Embeds an entity description and stores it using EmbedService."""
+        self.embed_service.embed_entity(entity_name, description)
 
     def get_entity_subgraph(self, entity_name: str, depth: int = 1) -> KnowledgeGraph:
-        """Retrieves the subgraph of an entity from Neo4j using Neo4jClient."""
-        entries = self.neo4j_client.get_subgraph(entity_name, depth)
+        """Retrieves the subgraph of an entity from the graph database."""
+        entries = self.graph_db.get_subgraph(entity_name, depth)
 
         graph = KnowledgeGraph(entities=[], relationships=[])
         for entry in entries:
@@ -77,29 +77,29 @@ class EntityService:
         return graph
 
     def find_similar_entities_by_name(self, entity_name: str, limit: int = 5) -> Optional[List[Tuple[str, str, float]]]:
-        """Finds similar entities using PgVectorService."""
-        return self.pgvector_service.find_similar_entities_by_entity_name(entity_name, limit)
+        """Finds similar entities using EmbedService."""
+        return self.embed_service.find_similar_entities_by_entity_name(entity_name, limit)
 
     def find_similar_entities_by_description(self, entity_name:str, description: str, limit: int = 5) -> Optional[List[Tuple[str, str, float]]]:
-        """Finds similar entities using PgVectorService."""
-        return self.pgvector_service.find_similar_entities_by_description(entity_name, description, limit)
+        """Finds similar entities using EmbedService."""
+        return self.embed_service.find_similar_entities_by_description(entity_name, description, limit)
 
     def create_entity_node(self, entity: Entity) -> Optional[str]:
-        """Creates an entity node in Neo4j using Neo4jClient."""
-        return self.neo4j_client.create_node(entity)
+        """Creates an entity node in the graph database."""
+        return self.graph_db.create_node(entity)
 
     def get_entity_by_name(self, entity_name: str) -> Optional[Entity]:
-        """Retrieves an entity by name from Neo4j using Neo4jClient."""
-        return self.neo4j_client.get_node_by_name(entity_name)
+        """Retrieves an entity by name from the graph database."""
+        return self.graph_db.get_node_by_name(entity_name)
 
     def get_entity_names(self) -> List[str]:
-        """Retrieves entity names from Neo4j using Neo4jClient."""
-        return self.neo4j_client.query_node_names()
+        """Retrieves entity names from the graph database."""
+        return self.graph_db.query_node_names()
 
     def create_relationship(self, relationship_data: Any) -> Optional[str]:
-        """Creates a relationship in Neo4j using Neo4jClient."""
-        return self.neo4j_client.create_relationship(relationship_data)
+        """Creates a relationship in the graph database."""
+        return self.graph_db.create_relationship(relationship_data)
 
     def find_longest_shortest_paths(self) -> List[Any]|None:
-        """Retrieves the longest shortest paths from Neo4j using Neo4jClient."""
-        return self.neo4j_client.find_longest_shortest_paths()
+        """Retrieves the longest shortest paths from the graph database."""
+        return self.graph_db.find_longest_shortest_paths()

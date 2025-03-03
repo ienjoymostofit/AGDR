@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 
 import openai
 from openai import OpenAI
@@ -8,11 +8,12 @@ from pydantic import ValidationError
 
 from core.models import ConflictResolutionResult, KnowledgeGraph
 from core.config import ModelConfig
+from core.interfaces import LLMClient
 
 logger = logging.getLogger(__name__)
 
-class OpenAIClient:
-    """Client for interacting with the OpenAI API."""
+class OpenAIClient(LLMClient):
+    """Client for interacting with the OpenAI API that implements the LLMClient interface."""
 
     def __init__(self, think_tags: Tuple[str, str], reasoning_model_config: ModelConfig, entity_extraction_model_config: ModelConfig, conflict_resolution_model_config: ModelConfig):
         """Initializes the OpenAIClient with API key and other configurations."""
