@@ -2,6 +2,10 @@
 
 This repository contains an implementation inspired by concepts from ["Agentic Deep Graph Reasoning"](https://arxiv.org/abs/2502.13025) by [Markus J. Buehler](https://orcid.org/0000-0002-4173-9659). This implementation focuses on core concepts of iterative knowledge graph expansion through language model-driven reasoning.
 
+> [!IMPORTANT]
+>  ⚠️ **Note:** This implementation has been significantly updated since the previous version. Key changes include the addition of vector embedding using pgvector for enhanced similarity comparisons and conflict resolution, a dedicated conflict resolution service, and improved model configuration options.  See the "Key Features" and "Technical Architecture" sections for more details.  Please review the updated installation and configuration instructions carefully.
+
+
 ## 📝 Scope Note
 
 This is an implementation that focuses on basic autonomous knowledge graph expansion and implements core concepts of iterative reasoning and structured knowledge extraction. It provides a practical starting point for experimenting with agentic knowledge graphs.
@@ -43,7 +47,7 @@ The system consists of several key components:
 ### Prerequisites
 
 - Python 3.8+
-- Docker and Docker Compose (for Neo4j and optionally pgvector)
+- Docker and Docker Compose (for Neo4j and pgvector)
 - Access to OpenAI API or a compatible LLM API endpoint (e.g., Ollama).
 - A running PostgreSQL instance with the `pgvector` extension enabled.
 - Access to a local LLM API endpoint (e.g., Ollama) is recommended for faster iteration, especially for the reasoning and embedding models.
@@ -61,9 +65,9 @@ cd agentic-deep-graph-reasoning
 pip install -r requirements.txt
 ```
 
-3. Start Neo4j:
+3. Start Neo4j and pgvector using Docker Compose:
 ```bash
-docker-compose up -d neo4j  # Only start Neo4j
+docker-compose up -d   # Only start Neo4j
 ```
 
 4.  **Set up PostgreSQL with pgvector:**
@@ -74,10 +78,10 @@ docker-compose up -d neo4j  # Only start Neo4j
         docker-compose up -d postgres
         ```
 
-    *   Connect to your PostgreSQL instance (e.g., using `psql`):
+    *   Connect to the PostgreSQL instance (e.g., using `psql`):
 
         ```bash
-        psql -h localhost -U youruser -d yourdatabase
+        psql -h localhost -P54321 -U postgres -d postgres
         ```
 
     *   Create the `pgvector` extension:
@@ -120,13 +124,13 @@ CONFLICT_RESOLUTION_MODEL_CONFIG='{"model_name": "gpt-4o-mini", "api_key": "sk--
 THINK_TAGS="[\"<|begin_of_thought|>\",\"<|end_of_thought|>\"]"
 
 # PgVector Configuration
-PGVECTOR_DBNAME=yourdatabase
-PGVECTOR_USER=youruser
-PGVECTOR_PASSWORD=yourpassword
+PGVECTOR_DBNAME=postgres
+PGVECTOR_USER=postgres
+PGVECTOR_PASSWORD=postgres
 PGVECTOR_HOST=localhost
-PGVECTOR_PORT=5432
+PGVECTOR_PORT=54321
 PGVECTOR_TABLE_NAME=entity_embeddings
-PGVECTOR_VECTOR_DIMENSION=1536
+PGVECTOR_VECTOR_DIMENSION=1536  # optional
 ```
 
 #### Model Configuration Options
