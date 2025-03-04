@@ -44,8 +44,10 @@ class KnowledgeExtractorService(KnowledgeExtractor):
         knowledge_graph = self.llm_client.extract_knowledge_graph(prompt)
         
         if knowledge_graph:
-            logger.info(f"Extracted knowledge graph with {len(knowledge_graph.entities)} entities and {len(knowledge_graph.relationships)} relationships")
+            logger.info("  Extracted knowledge graph:")
+            logger.info(f"    Entities: {len(knowledge_graph.entities)}")
+            logger.info(f"    Relationships: {len(knowledge_graph.relationships)}")
         else:
-            logger.warning("Failed to extract knowledge graph from text")
+            logger.warning("  Failed to extract knowledge graph from text")
         
         return knowledge_graph

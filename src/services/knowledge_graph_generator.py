@@ -118,10 +118,13 @@ class KnowledgeGraphGenerator:
         if knowledge_graph:
             logger.info("\n--- Entities added in this iteration ---")
             for entity in knowledge_graph.entities:
-                logger.info(f"  - Name: {entity.name}, ID: {entity.id}, Categories: {entity.category}")
+                logger.info(f"    - Name: {entity.name}")
+                logger.info(f"      ID: {entity.id}")
+                logger.info(f"      Categories: {entity.category}")
 
             logger.info("\n--- Relationships added in this iteration ---")
             for relationship in knowledge_graph.relationships:
-                logger.info(
-                    f"  - {relationship.relation_type} from {relationship.source_entity_name} to {relationship.target_entity_name}, Attributes: {relationship.attributes}"
-                )
+                logger.info(f"    - Type: {relationship.relation_type}")
+                logger.info(f"      Source: {relationship.source_entity_name}")
+                logger.info(f"      Target: {relationship.target_entity_name}")
+                logger.info(f"      Attributes: {relationship.attributes}")

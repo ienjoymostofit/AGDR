@@ -42,3 +42,10 @@ class Settings(BaseSettings):
             format="%(asctime)s - %(levelname)s - %(module)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
         )
+
+        # Add color-coding to log levels
+        logging.addLevelName(logging.DEBUG, "\033[0;34m%s\033[0m" % logging.getLevelName(logging.DEBUG))
+        logging.addLevelName(logging.INFO, "\033[0;32m%s\033[0m" % logging.getLevelName(logging.INFO))
+        logging.addLevelName(logging.WARNING, "\033[0;33m%s\033[0m" % logging.getLevelName(logging.WARNING))
+        logging.addLevelName(logging.ERROR, "\033[0;31m%s\033[0m" % logging.getLevelName(logging.ERROR))
+        logging.addLevelName(logging.CRITICAL, "\033[0;31m%s\033[0m" % logging.getLevelName(logging.CRITICAL))

@@ -99,5 +99,7 @@ class ConflictResolutionService(ConflictResolver):
                 new_description=None
             )
 
-        logger.info(f"Conflict resolution result: Action={cr_result.action}, New name={cr_result.new_name}")
+        logger.info(f"  Conflict resolution result:")
+        logger.info(f"    Action: {cr_result.action}")
+        logger.info(f"    New name: {cr_result.new_name}")
         return cr_result

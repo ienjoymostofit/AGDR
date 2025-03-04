@@ -26,8 +26,9 @@ class LLMReasoningService(ReasoningService):
         reasoning_trace = self.llm_client.generate_reasoning_trace(prompt)
         
         if reasoning_trace:
-            logger.info(f"Generated reasoning trace of length: {len(reasoning_trace)}")
+            logger.info("  Generated reasoning trace:")
+            logger.info(f"    Length: {len(reasoning_trace)}")
         else:
-            logger.warning("Failed to generate reasoning trace")
+            logger.warning("  Failed to generate reasoning trace")
             
         return reasoning_trace

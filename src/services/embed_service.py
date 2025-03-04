@@ -42,13 +42,13 @@ class EmbedService:
                     description,
                     np.array(description_embedding)
                 )
-                logger.info(f"Embedding stored for entity: {entity_name}")
+                logger.info(f"  Embedding stored for entity: {entity_name}")
                 return description_embedding  # Return description embedding
             else:
-                logger.warning(f"Failed to generate embedding for entity: {entity_name}. Not storing in PgVector.")
+                logger.warning(f"  Failed to generate embedding for entity: {entity_name}. Not storing in PgVector.")
                 return None
         except Exception as e:
-            logger.error(f"Error embedding entity '{entity_name}': {e}")
+            logger.error(f"  Error embedding entity '{entity_name}': {e}")
             return None
 
     def remove_entity(self, entity_name: str) -> bool:

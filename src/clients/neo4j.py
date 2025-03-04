@@ -48,7 +48,7 @@ class Neo4jClient(GraphDatabase):
     def update_node_name_and_description(self, old_name, new_name: str, description: str) -> None:
         """Updates the name and description of a node in Neo4j."""
         def _update_node_name_and_description_tx(tx, old_name: str, new_name: str, description: str):
-            query = "MATCH (n {name: $old_name}) SET n.description = $description", "SET n.name = $name"
+            query = "MATCH (n {name: $old_name}) SET n.description = $description, n.name = $name"
             tx.run(query, old_name=old_name, name=new_name, description=description)
 
         try:
@@ -122,7 +122,9 @@ class Neo4jClient(GraphDatabase):
 
             if result:
                 node_id = result["existing_node_id"]
-                logger.info(f"Node with name '{entity_data.name}' already exists (ID: {node_id}). Merging labels.")
+                logger.info(f"  Node with name '{entity_data.name}' already exists.")
+                logger.info(f"    ID: {node_id}")
+                logger.info("    Merging labels.")
                 merge_labels_query = f"MATCH (n) WHERE elementId(n) = $node_id SET n:{category_labels}"
                 tx.run(merge_labels_query, node_id=node_id)
                 return node_id
@@ -132,7 +134,8 @@ class Neo4jClient(GraphDatabase):
                 )
                 result = tx.run(create_query, name=entity_data.name, description=entity_data.description).single()
                 node_id = result["node_id"]
-                logger.info(f"Created node for '{entity_data.name}' with Neo4j ID: {node_id}")
+                logger.info(f"  Created node for '{entity_data.name}'")
+                logger.info(f"    Neo4j ID: {node_id}")
                 return node_id
 
         try:

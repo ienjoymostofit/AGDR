@@ -33,8 +33,14 @@ class PgVectorClient(VectorDatabase):
         """Establishes a connection to the PostgreSQL database."""
         try:
             self.conn = psycopg2.connect(dbname=self.dbname, user=self.user, password=self.password, host=self.host, port=self.port)
+            logger.info("Successfully connected to PostgreSQL.")
+            try:
+                self.create_extension()
+                logger.info("pgvector extension created successfully during connection.")
+            except Exception as e:
+                logger.error(f"Failed to create pgvector extension during connection: {e}")
             register_vector(self.conn) # Register pgvector with psycopg2
-            logger.info("Successfully connected to PostgreSQL with pgvector.")
+            logger.info("pgvector extension registered.")
         except Exception as e:
             logger.error(f"Failed to connect to PostgreSQL: {e}")
             if self.conn:
@@ -184,7 +190,7 @@ class PgVectorClient(VectorDatabase):
         try:
             cur.execute(
                 f"""
-                SELECT entity_name, entity_name_embedding, description, description_embedding <=> %s AS distance
+                SELECT entity_name, description, description_embedding <=> %s AS distance
                 FROM {self.table_name}
                 WHERE description_embedding != %s
                 ORDER BY description_embedding <=> %s
