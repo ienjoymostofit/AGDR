@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../
+      dockerfile: web/backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../:/app
+    environment:
+      - NEO4J_URI=${NEO4J_URI}
+      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+      - REASONING_MODEL_CONFIG=${REASONING_MODEL_CONFIG}
+      - ENTITY_EXTRACTION_MODEL_CONFIG=${ENTITY_EXTRACTION_MODEL_CONFIG}
+      - EMBEDDING_MODEL_CONFIG=${EMBEDDING_MODEL_CONFIG}
+      - CONFLICT_RESOLUTION_MODEL_CONFIG=${CONFLICT_RESOLUTION_MODEL_CONFIG}
+      - THINK_TAGS=${THINK_TAGS}
+      - PGVECTOR_DBNAME=${PGVECTOR_DBNAME}
+      - PGVECTOR_USER=${PGVECTOR_USER}
+      - PGVECTOR_PASSWORD=${PGVECTOR_PASSWORD}
+      - PGVECTOR_HOST=${PGVECTOR_HOST}
+      - PGVECTOR_PORT=${PGVECTOR_PORT}
+      - PGVECTOR_TABLE_NAME=${PGVECTOR_TABLE_NAME}
+      - PGVECTOR_VECTOR_DIMENSION=${PGVECTOR_VECTOR_DIMENSION}
+    depends_on:
+      - neo4j
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  neo4j:
+    image: neo4j:2025.01.0
+    ports:
+      - 7687:7687
+      - 7474:7474
+    volumes:
+      - neo4j-data:/data
+    environment:
+      NEO4J_AUTH: neo4j/testtest
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    ports:
+      - "54321:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  neo4j-data:
+  postgres-data:
