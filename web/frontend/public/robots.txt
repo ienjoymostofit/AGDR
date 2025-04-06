@@ -1,0 +1,25 @@
+# Robots.txt for Agentic Deep Graph Reasoning
+# Security-focused configuration
+
+User-agent: *
+# Disallow access to API endpoints
+Disallow: /api/
+# Disallow access to WebSocket endpoints
+Disallow: /ws/
+# Allow access to static assets
+Allow: /static/
+Allow: /assets/
+Allow: /images/
+Allow: /favicon.ico
+
+# Disallow all bots from admin or sensitive areas
+User-agent: *
+Disallow: /admin/
+Disallow: /internal/
+Disallow: /private/
+
+# Crawl-delay to prevent server overload
+Crawl-delay: 10
+
+# Sitemap location (if implemented in the future)
+# Sitemap: https://example.com/sitemap.xml
