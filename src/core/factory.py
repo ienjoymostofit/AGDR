@@ -6,7 +6,9 @@ from core.interfaces import GraphDatabase, VectorDatabase, LLMClient, EmbeddingP
 from clients.neo4j import Neo4jClient
 from clients.pgvector import PgVectorClient
 from clients.openai import OpenAIClient
+from clients.mock_openai import MockOpenAIClient
 from services.embedder import Embedder
+from services.mock_embedder import MockEmbedder
 from services.embed_service import EmbedService
 from services.entity_service import EntityService
 from services.knowledge_graph_generator import KnowledgeGraphGenerator
@@ -52,18 +54,29 @@ class ServiceFactory:
     def get_llm_client(self) -> LLMClient:
         """Returns a LLMClient implementation."""
         if "llm_client" not in self._instances:
-            self._instances["llm_client"] = OpenAIClient(
+            # Use MockOpenAIClient for testing
+            self._instances["llm_client"] = MockOpenAIClient(
                 self.settings.think_tags,
                 self.settings.reasoning_model_config,
                 self.settings.entity_extraction_model_config,
                 self.settings.conflict_resolution_model_config
             )
+            # Uncomment the following to use the real OpenAI client
+            # self._instances["llm_client"] = OpenAIClient(
+            #     self.settings.think_tags,
+            #     self.settings.reasoning_model_config,
+            #     self.settings.entity_extraction_model_config,
+            #     self.settings.conflict_resolution_model_config
+            # )
         return self._instances["llm_client"]
     
     def get_embedding_provider(self) -> EmbeddingProvider:
         """Returns an EmbeddingProvider implementation."""
         if "embedding_provider" not in self._instances:
-            self._instances["embedding_provider"] = Embedder(self.settings.embedding_model_config)
+            # Use MockEmbedder for testing
+            self._instances["embedding_provider"] = MockEmbedder(self.settings.embedding_model_config)
+            # Uncomment the following to use the real Embedder
+            # self._instances["embedding_provider"] = Embedder(self.settings.embedding_model_config)
         return self._instances["embedding_provider"]
     
     def get_reasoning_service(self) -> LLMReasoningService:
