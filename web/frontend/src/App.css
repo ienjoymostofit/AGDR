@@ -1,0 +1,586 @@
+/* Base styles with enhanced security focus */
+:root {
+  /* Define color variables for consistent theming */
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --success-color: #2ecc71;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --light-color: #f5f7fa;
+  --dark-color: #333;
+  --border-color: #ddd;
+  --text-color: #333;
+  --text-muted: #7f8c8d;
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --border-radius: 8px;
+  --transition-speed: 0.2s;
+}
+
+/* Reset with security considerations */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Prevent text overflow that could lead to layout issues */
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--light-color);
+  overflow-x: hidden;
+  min-height: 100vh;
+  /* Prevent text size adjustment after orientation changes in iOS */
+  -webkit-text-size-adjust: 100%;
+  /* Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus styles for accessibility */
+:focus {
+  outline: 3px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+/* App container */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.app-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  z-index: 10;
+}
+
+.app-header h1 {
+  font-size: 1.8rem;
+  font-weight: 500;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Main content */
+.app-main {
+  display: flex;
+  flex: 1;
+  padding: 1rem;
+  gap: 1rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .app-main {
+    flex-direction: column;
+  }
+}
+
+/* Control panel */
+.control-panel {
+  flex: 0 0 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+}
+
+.input-section h2,
+.visualization-panel h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* Error banner */
+.error-banner {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-left: 4px solid var(--danger-color);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  position: relative;
+}
+
+.error-banner p {
+  color: var(--danger-color);
+  margin: 0;
+  padding-right: 20px;
+}
+
+.error-close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Form elements with enhanced security */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--dark-color);
+}
+
+.form-group textarea,
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: border-color var(--transition-speed);
+}
+
+.form-group textarea:focus,
+.form-group input:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.generate-button {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+  position: relative;
+}
+
+.generate-button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.generate-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.generate-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Status section */
+.status-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.status-section h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-color);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.status-badge.running {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.status-badge.completed {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.status-badge.failed {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.progress-container {
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: #ecf0f1;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.progress {
+  height: 100%;
+  background-color: var(--secondary-color);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Logs section */
+.logs-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.logs-section h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-color);
+}
+
+.logs {
+  background-color: #f8f9fa;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  overflow-y: auto;
+  max-height: 200px;
+  flex: 1;
+}
+
+.log-entry {
+  margin-bottom: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 2px;
+  word-break: break-word;
+}
+
+.log-entry.info {
+  border-left: 3px solid var(--secondary-color);
+}
+
+.log-entry.success {
+  border-left: 3px solid var(--success-color);
+}
+
+.log-entry.warning {
+  border-left: 3px solid var(--warning-color);
+}
+
+.log-entry.error {
+  border-left: 3px solid var(--danger-color);
+}
+
+.log-timestamp {
+  color: var(--text-muted);
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* Visualization panel */
+.visualization-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.graph-section {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-graph {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-graph p {
+  margin-bottom: 0.5rem;
+}
+
+/* Details panel */
+.details-panel {
+  display: flex;
+  gap: 1rem;
+  height: 300px;
+}
+
+@media (max-width: 768px) {
+  .details-panel {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .reasoning-section,
+  .entity-details {
+    height: 300px;
+  }
+}
+
+.reasoning-section {
+  flex: 1;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.reasoning-section h3,
+.entity-details h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-color);
+}
+
+.reasoning-content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.reasoning-content pre {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+.empty-message {
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.entity-details {
+  flex: 1;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.entity-card {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.entity-card h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+  word-break: break-word;
+}
+
+.entity-description {
+  margin-bottom: 1rem;
+  color: var(--dark-color);
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.entity-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.category-tag {
+  background-color: #ecf0f1;
+  color: var(--text-muted);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.entity-card h5 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-color);
+}
+
+.relationships-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.relationship-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.relationship-item:last-child {
+  border-bottom: none;
+}
+
+.no-relationships {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0.5rem;
+}
+
+.relation-type {
+  color: var(--secondary-color);
+  font-weight: 500;
+}
+
+.direction {
+  color: var(--text-muted);
+}
+
+.entity-name {
+  font-weight: 500;
+}
+
+/* Footer */
+.app-footer {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.security-notice {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+/* Accessibility enhancements */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Print styles */
+@media print {
+  .control-panel {
+    display: none;
+  }
+  
+  .app-header,
+  .app-footer {
+    background-color: white;
+    color: black;
+    box-shadow: none;
+  }
+  
+  .visualization-panel {
+    page-break-inside: avoid;
+  }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .generate-button {
+    border: 1px solid ButtonText;
+  }
+  
+  .status-badge {
+    border: 1px solid ButtonText;
+  }
+}
+
+/* Security-focused animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.error-banner {
+  animation: fadeIn 0.3s ease-in-out;
+}

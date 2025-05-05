@@ -1,0 +1,21 @@
+# Security.txt for Agentic Deep Graph Reasoning
+# https://securitytxt.org/
+
+# Contact information
+Contact: mailto:security@example.com
+Contact: https://github.com/vetlefo/agentic-deep-graph-reasoning/security/advisories/new
+
+# Encryption key
+# Encryption: https://example.com/pgp-key.txt
+
+# Security policy
+Policy: https://github.com/vetlefo/agentic-deep-graph-reasoning/security/policy
+
+# Preferred languages
+Preferred-Languages: en
+
+# Canonical URL
+Canonical: https://example.com/.well-known/security.txt
+
+# Expires
+Expires: 2026-04-06T21:00:00.000Z
